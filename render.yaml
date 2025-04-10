@@ -11,5 +11,5 @@ services:
           property: connectionString
       - key: MONGODB_URI
         sync: false
-      - key: RAILS_MASTER_KEY
-        sync: false 
+      - key: RAILS_ENV
+        value: production 
