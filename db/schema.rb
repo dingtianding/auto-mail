@@ -82,8 +82,18 @@ ActiveRecord::Schema[7.1].define(version: 2025_04_10_052613) do
     t.index ["invoice_id"], name: "index_line_items_on_invoice_id"
   end
 
+  create_table "mailing_documents", force: :cascade do |t|
+    t.text "content"
+    t.string "status", default: "pending"
+    t.bigint "customer_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id"], name: "index_mailing_documents_on_customer_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "invoices", "customers"
   add_foreign_key "line_items", "invoices"
+  add_foreign_key "mailing_documents", "customers"
 end
