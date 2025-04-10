@@ -1,6 +1,13 @@
 class CustomersController < ApplicationController
   def index
     @customers = Customer.all
+    
+    respond_to do |format|
+      format.html
+      format.csv { send_data DataExportService.to_csv(@customers), filename: "customers-#{Date.today}.csv" }
+      format.json { send_data DataExportService.to_json(@customers), filename: "customers-#{Date.today}.json" }
+      format.xml { send_data DataExportService.to_xml(@customers), filename: "customers-#{Date.today}.xml" }
+    end
   end
 
   def show

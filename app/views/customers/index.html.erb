@@ -1,2 +1,36 @@
-<h1>Customers#index</h1>
-<p>Find me in app/views/customers/index.html.erb</p>
+<h1>Customers</h1>
+
+<div class="actions">
+  <%= link_to 'New Customer', new_customer_path, class: 'button' %>
+  <%= link_to 'Import Customers', new_import_path, class: 'button' %>
+  
+  <div class="export-buttons">
+    Export as:
+    <%= link_to 'CSV', customers_path(format: :csv), class: 'button' %>
+    <%= link_to 'JSON', customers_path(format: :json), class: 'button' %>
+    <%= link_to 'XML', customers_path(format: :xml), class: 'button' %>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Documents</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @customers.each do |customer| %>
+      <tr>
+        <td><%= customer.name %></td>
+        <td><%= customer.email %></td>
+        <td><%= customer.mailing_documents.count %></td>
+        <td>
+          <%= link_to 'View', customer_path(customer) %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

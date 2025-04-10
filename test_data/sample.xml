@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<customers>
+  <customer>
+    <name>Tom Green</name>
+    <email>tom.g@example.com</email>
+    <address>987 Cedar Lane</address>
+    <phone>555-0006</phone>
+  </customer>
+  <customer>
+    <name>Emma Black</name>
+    <email>emma.b@example.com</email>
+    <address>147 Birch St</address>
+    <phone>555-0007</phone>
+  </customer>
+</customers>

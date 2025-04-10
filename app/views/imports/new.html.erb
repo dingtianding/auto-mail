@@ -1,0 +1,44 @@
+<h1>Import Customers</h1>
+
+<div class="import-container">
+  <h2>Upload File</h2>
+  <%= form_with(url: imports_path, multipart: true, local: true) do |f| %>
+    <div class="field">
+      <%= f.file_field :file, accept: '.csv,.json,.xml' %>
+    </div>
+    
+    <%= f.submit 'Import', class: 'button' %>
+  <% end %>
+
+  <div class="sample-formats mt-4">
+    <h3>Sample Formats</h3>
+    
+    <h4>CSV Format:</h4>
+    <pre>
+name,email,address,phone
+John Doe,john@example.com,123 Main St,555-0123
+Jane Smith,jane@example.com,456 Oak Ave,555-0124</pre>
+
+    <h4>JSON Format:</h4>
+    <pre>
+[
+  {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "address": "123 Main St",
+    "phone": "555-0123"
+  }
+]</pre>
+
+    <h4>XML Format:</h4>
+    <pre>
+&lt;customers&gt;
+  &lt;customer&gt;
+    &lt;name&gt;John Doe&lt;/name&gt;
+    &lt;email&gt;john@example.com&lt;/email&gt;
+    &lt;address&gt;123 Main St&lt;/address&gt;
+    &lt;phone&gt;555-0123&lt;/phone&gt;
+  &lt;/customer&gt;
+&lt;/customers&gt;</pre>
+  </div>
+</div> 

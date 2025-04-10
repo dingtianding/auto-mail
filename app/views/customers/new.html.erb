@@ -1,2 +1,25 @@
-<h1>Customers#new</h1>
-<p>Find me in app/views/customers/new.html.erb</p>
+<h1>New Customer</h1>
+
+<%= form_with(model: @customer, local: true) do |f| %>
+  <div>
+    <%= f.label :name %>
+    <%= f.text_field :name %>
+  </div>
+
+  <div>
+    <%= f.label :email %>
+    <%= f.email_field :email %>
+  </div>
+
+  <div>
+    <%= f.label :address %>
+    <%= f.text_area :address %>
+  </div>
+
+  <div>
+    <%= f.label :phone %>
+    <%= f.text_field :phone %>
+  </div>
+
+  <%= f.submit 'Create Customer' %>
+<% end %>
