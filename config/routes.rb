@@ -2,7 +2,17 @@ Rails.application.routes.draw do
   root 'customers#index'
   
   resources :customers do
-    resources :mailing_documents, only: [:create, :show]
+    resources :invoices do
+      member do
+        post :generate_pdf
+      end
+    end
+    resources :mailing_documents do
+      member do
+        post :regenerate
+        get :preview
+      end
+    end
   end
 
   resources :imports, only: [:new, :create]

@@ -1,31 +1,136 @@
-<h1><%= @customer.name %></h1>
-
-<div class="customer-details">
-  <p><strong>Email:</strong> <%= @customer.email %></p>
-  <p><strong>Address:</strong> <%= @customer.address %></p>
-  <p><strong>Phone:</strong> <%= @customer.phone %></p>
-</div>
-
-<h2>Generate New Letter</h2>
-<%= form_with(url: customer_mailing_documents_path(@customer), local: true) do |f| %>
-  <div class="field">
-    <%= f.label :content, "Letter Content" %>
-    <%= f.text_area :content, rows: 10, 
-        value: "Dear #{@customer.name},\n\nThis is a sample letter content.\n\nBest regards,\nYour Company" %>
-  </div>
-  
-  <%= f.submit 'Generate Letter', class: 'button' %>
-<% end %>
-
-<h2>Previous Documents</h2>
-<div class="documents">
-  <% @customer.mailing_documents.each do |doc| %>
-    <div class="document">
-      <p>Status: <%= doc.status %></p>
-      <% if doc.pdf_path %>
-        <%= link_to 'View PDF', doc.pdf_path, target: '_blank', class: 'button' %>
-      <% end %>
-      <p>Created: <%= doc.created_at.strftime("%B %d, %Y") %></p>
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header">
+      <h2>Customer Details</h2>
     </div>
-  <% end %>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Name:</strong> <%= @customer.name %></p>
+          <p><strong>Email:</strong> <%= @customer.email %></p>
+          <p><strong>Address:</strong> <%= @customer.address %></p>
+          <p><strong>Phone:</strong> <%= @customer.phone %></p>
+        </div>
+        <div class="col-md-6 text-end">
+          <%= link_to 'Edit', edit_customer_path(@customer), class: 'btn btn-primary' %>
+          <%= link_to 'Back', customers_path, class: 'btn btn-secondary' %>
+          <%= link_to 'New Document', new_customer_mailing_document_path(@customer), 
+              class: 'btn btn-success' %>
+          <%= link_to 'New Invoice', new_customer_invoice_path(@customer), 
+              class: 'btn btn-info' %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-4">
+    <div class="card-header">
+      <h3>Documents</h3>
+    </div>
+    <div class="card-body">
+      <% if @customer.mailing_documents.any? %>
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Document ID</th>
+                <th>Created Date</th>
+                <th>Content Preview</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @customer.mailing_documents.order(created_at: :desc).each do |doc| %>
+                <tr>
+                  <td><%= doc.id %></td>
+                  <td><%= doc.created_at.strftime("%B %d, %Y") %></td>
+                  <td>
+                    <% preview = doc.content.to_s.truncate(50, omission: '...') %>
+                    <span class="text-muted"><%= preview %></span>
+                  </td>
+                  <td>
+                    <span class="badge bg-<%= doc.status_color %>">
+                      <%= doc.status_label.titleize %>
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <div class="btn-group">
+                      <% if doc.pdf_content.present? %>
+                        <%= link_to customer_mailing_document_path(@customer, doc, format: :pdf),
+                            class: 'btn btn-primary btn-sm',
+                            target: '_blank',
+                            title: 'View PDF' do %>
+                          <i class="fas fa-file-pdf"></i> View PDF
+                        <% end %>
+                      <% end %>
+                      
+                      <%= button_to regenerate_customer_mailing_document_path(@customer, doc),
+                          method: :post,
+                          form: { class: 'd-inline' },
+                          class: 'btn btn-warning btn-sm',
+                          data: { turbo_confirm: 'Are you sure?' } do %>
+                        <i class="fas fa-sync"></i> Regenerate
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-muted">No documents yet.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card mt-4">
+    <div class="card-header">
+      <h3>Recent Invoices</h3>
+    </div>
+    <div class="card-body">
+      <% if @customer.invoices.any? %>
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Invoice #</th>
+                <th>Date</th>
+                <th>Due Date</th>
+                <th class="text-end">Amount</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @customer.invoices.order(created_at: :desc).each do |invoice| %>
+                <tr>
+                  <td><%= invoice.invoice_number %></td>
+                  <td><%= invoice.created_at.strftime("%B %d, %Y") %></td>
+                  <td><%= invoice.due_date.strftime("%B %d, %Y") %></td>
+                  <td class="text-end"><%= number_to_currency(invoice.total_amount) %></td>
+                  <td>
+                    <span class="badge bg-<%= invoice.status == 'paid' ? 'success' : 'warning' %>">
+                      <%= invoice.status.titleize %>
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <%= link_to customer_invoice_path(@customer, invoice, format: :pdf),
+                        class: 'btn btn-primary btn-sm',
+                        target: '_blank',
+                        title: 'View PDF' do %>
+                      <i class="fas fa-file-pdf"></i> View PDF
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-muted">No invoices yet.</p>
+      <% end %>
+    </div>
+  </div>
 </div>

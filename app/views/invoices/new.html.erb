@@ -1,0 +1,79 @@
+<div class="container mt-4" data-controller="invoice">
+  <h2>New Invoice for <%= @customer.name %></h2>
+
+  <%= form_with(model: [@customer, @invoice], local: true) do |f| %>
+    <% if @invoice.errors.any? %>
+      <div class="alert alert-danger">
+        <h4><%= pluralize(@invoice.errors.count, "error") %> prohibited this invoice from being saved:</h4>
+        <ul>
+          <% @invoice.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="form-group">
+          <%= f.label :due_date %>
+          <%= f.date_field :due_date, class: 'form-control' %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :payment_terms %>
+          <%= f.select :payment_terms, 
+              ['Net 30', 'Net 15', 'Due on Receipt'], 
+              {}, class: 'form-control' %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :tax_rate %>
+          <%= f.number_field :tax_rate, 
+              value: (@invoice.tax_rate || 0.08),
+              step: 0.01, 
+              class: 'form-control' %>
+        </div>
+      </div>
+    </div>
+
+    <h4 class="mt-4">Line Items</h4>
+    <div id="line-items" data-invoice-target="lineItems">
+      <% if @invoice.line_items.empty? %>
+        <%= f.fields_for :line_items, LineItem.new do |item_form| %>
+          <%= render 'line_item_fields', f: item_form %>
+        <% end %>
+      <% else %>
+        <%= f.fields_for :line_items do |item_form| %>
+          <%= render 'line_item_fields', f: item_form %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <div class="mt-3">
+      <%= button_tag type: 'button',
+          class: 'btn btn-secondary',
+          data: { action: "invoice#addLineItem" } do %>
+        <i class="fas fa-plus"></i> Add Line Item
+      <% end %>
+    </div>
+
+    <div class="form-group mt-4">
+      <%= f.label :notes %>
+      <%= f.text_area :notes, class: 'form-control' %>
+    </div>
+
+    <div class="mt-4">
+      <%= f.submit 'Generate Invoice', class: 'btn btn-primary' %>
+      <%= link_to 'Cancel', customer_path(@customer), 
+          class: 'btn btn-secondary' %>
+    </div>
+  <% end %>
+
+  <%# Template for new line items %>
+  <template data-invoice-target="template">
+    <%= fields_for 'invoice[line_items_attributes][]', LineItem.new, child_index: 'NEW_RECORD' do |item_form| %>
+      <%= render 'line_item_fields', f: item_form %>
+    <% end %>
+  </template>
+</div> 
