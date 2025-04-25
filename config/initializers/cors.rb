@@ -1,9 +1,10 @@
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
     allow do
-      origins 'http://localhost:3000'  # Your Next.js app
+      origins 'localhost:3000', 'http://localhost:3000'
       resource '*',
         headers: :any,
         methods: [:get, :post, :put, :patch, :delete, :options, :head],
-        credentials: true
+        credentials: true,
+        expose: ['access-token', 'expiry', 'token-type', 'uid', 'client']
     end
   end

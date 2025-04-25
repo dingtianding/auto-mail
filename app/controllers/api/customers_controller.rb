@@ -1,40 +1,27 @@
 module Api
-  class CustomersController < Api::BaseController
+  class CustomersController < ApplicationController
     def index
-      @customers = Customer.all
-      render_success(@customers)
-    rescue => e
-      Rails.logger.error "Error in index: #{e.message}"
-      render_error(e.message)
+      customers = Customer.all
+      render json: customers
     end
 
     def show
-      @customer = Customer.find(params[:id])
-      # Get MongoDB documents for this customer
-      documents = MailingDocument.where(customer_id: @customer.id).map do |doc|
-        {
-          id: doc.id.to_s,  # MongoDB ID needs to be converted to string
-          content: doc.content,
-          status: doc.status,
-          created_at: doc.created_at,
-          pdf_url: doc.pdf_url,
-          status_color: doc.status_color,
-          status_label: doc.status_label
-        }
-      end
-
-      customer_data = @customer.as_json.merge({
-        documents: documents,
-        invoices: @customer.invoices.order(created_at: :desc)
-      })
+      customer = Customer.find(params[:id])
       
-      render_success(customer_data)
-    rescue ActiveRecord::RecordNotFound => e
-      Rails.logger.error "Customer not found: #{e.message}"
-      render_error("Customer not found", :not_found)
-    rescue => e
-      Rails.logger.error "Error in show: #{e.message}"
-      render_error(e.message)
+      # Log the associations to see what's available
+      Rails.logger.info "Customer mailing_documents count: #{customer.mailing_documents.count}" if customer.respond_to?(:mailing_documents)
+      Rails.logger.info "Customer invoices count: #{customer.invoices.count}" if customer.respond_to?(:invoices)
+      
+      # Check what associations are available on the Customer model
+      Rails.logger.info "Available associations: #{Customer.reflect_on_all_associations.map(&:name).join(', ')}"
+      
+      # Render with the correct association name
+      render json: customer.as_json(
+        include: [
+          :mailing_documents,  # This is the correct association name
+          :invoices
+        ]
+      )
     end
 
     def create

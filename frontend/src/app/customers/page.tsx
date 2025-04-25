@@ -27,12 +27,20 @@ export default function CustomersPage() {
 
   const fetchCustomers = async () => {
     try {
+      console.log('Fetching customers...');
+      
+      // Use the correct endpoint directly
       const response = await api.get('/customers');
-      setCustomers(response.data.data);
+      console.log('Customer response:', response.data);
+      
+      // Set customers data
+      const customersData = Array.isArray(response.data) ? response.data : [];
+      setCustomers(customersData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching customers:', error);
-      setError('Failed to load customers');
+      setError('Failed to load customers. Please try again later.');
+      setCustomers([]); // Initialize with empty array to prevent mapping errors
       setLoading(false);
     }
   };
@@ -56,31 +64,16 @@ export default function CustomersPage() {
   };
 
   const handleRowClick = (id: number) => {
+    console.log(`Navigating to customer ${id}`);
     router.push(`/customers/${id}`);
   };
 
-  const handleExport = async (format: 'csv' | 'json' | 'xml') => {
-    try {
-      const response = await api.get(`/customers.${format}`, {
-        responseType: 'blob'
-      });
-      
-      const blob = new Blob([response.data], {
-        type: format === 'csv' ? 'text/csv' :
-              format === 'json' ? 'application/json' : 'application/xml'
-      });
-      
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `customers.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error(`Error exporting ${format}:`, error);
-    }
+  const exportCustomers = (format = 'csv') => {
+    // Create a direct download link to the customers endpoint with format
+    const downloadUrl = `${api.defaults.baseURL}/customers.${format}`;
+    
+    // Open the URL in a new window/tab
+    window.open(downloadUrl, '_blank');
   };
 
   const deleteCustomer = async (id: string) => {
@@ -95,27 +88,9 @@ export default function CustomersPage() {
     }
   };
 
-  const bulkDeleteCustomers = async (ids: string[]) => {
-    if (ids.length === 0) return;
-    
-    if (confirm(`Are you sure you want to delete ${ids.length} customers?`)) {
-      try {
-        await api.post('/customers/bulk_destroy', { ids });
-        // Refresh the customer list
-        fetchCustomers();
-      } catch (error) {
-        console.error("Error bulk deleting customers:", error);
-      }
-    }
-  };
-
-  const exportCustomers = (format = 'csv') => {
-    // Create a direct download link to the customers endpoint with format
-    const downloadUrl = `${api.defaults.baseURL.replace('/api', '')}/customers.${format}`;
-    
-    // Open the URL in a new window/tab
-    window.open(downloadUrl, '_blank');
-  };
+  if (loading) {
+    return <div className="p-6">Loading customers...</div>;
+  }
 
   if (error) return <div className="p-6 text-red-500">{error}</div>;
 
@@ -178,39 +153,48 @@ export default function CustomersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {customers.map((customer) => (
-              <TableRow 
-                key={customer.id}
-                onClick={() => handleRowClick(customer.id)}
-                className="cursor-pointer hover:bg-gray-100 transition-colors"
-              >
-                <TableCell>{customer.name}</TableCell>
-                <TableCell>{customer.email}</TableCell>
-                <TableCell>{customer.documents?.length || 0}</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="link"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent row click when clicking button
-                      router.push(`/customers/${customer.id}`);
-                    }}
-                  >
-                    View
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteCustomer(customer.id.toString());
-                    }}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
+            {customers && customers.length > 0 ? (
+              customers.map((customer) => (
+                <TableRow 
+                  key={customer.id}
+                  onClick={() => handleRowClick(customer.id)}
+                  className="cursor-pointer hover:bg-gray-100 transition-colors"
+                >
+                  <TableCell>{customer.name}</TableCell>
+                  <TableCell>{customer.email}</TableCell>
+                  <TableCell>{customer.documents?.length || 0}</TableCell>
+                  <TableCell className="text-right">
+                    <Link href={`/customers/${customer.id}`} passHref>
+                      <Button
+                        variant="link"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click when clicking button
+                        }}
+                      >
+                        View
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteCustomer(customer.id.toString());
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-4">
+                  No customers found.
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>

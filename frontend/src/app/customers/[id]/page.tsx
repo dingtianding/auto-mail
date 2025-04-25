@@ -67,6 +67,13 @@ export default function CustomerDetailsPage() {
 
   const handleViewPdf = async (documentId: string) => {
     try {
+      console.log('Viewing PDF for document ID:', documentId);
+      
+      if (!documentId) {
+        console.error('Document ID is undefined or null');
+        return;
+      }
+      
       const response = await api.get(`/customers/${params.id}/mailing_documents/${documentId}/download`, {
         responseType: 'blob',
         headers: {
@@ -88,47 +95,55 @@ export default function CustomerDetailsPage() {
 
   const handleRegeneratePdf = async (documentId: string) => {
     try {
-      await api.post(`/api/customers/${params.id}/mailing_documents/${documentId}/regenerate`);
-      // Refresh the customer data to get updated PDF status
-      const response = await api.get(`/api/customers/${params.id}`);
-      setCustomer(response.data.data);
+      await api.post(`/customers/${params.id}/mailing_documents/${documentId}/regenerate`);
+      fetchCustomer(); // Refresh to get updated PDF status
     } catch (error) {
       console.error('Error regenerating PDF:', error);
     }
   };
 
-  useEffect(() => {
-    const fetchCustomer = async () => {
-      try {
-        console.log('Fetching customer with ID:', params.id);
-        const response = await api.get(`/customers/${params.id}`);
-        
-        // More detailed logging
-        console.log('Full API Response:', response);
-        console.log('Customer Data:', response.data);
-        
-        const customerData = response.data.data;
-        console.log('Actual Customer:', customerData);
-        if (customerData) {
-          console.log('Documents Array:', customerData.documents);
-          console.log('Sample Document:', customerData.documents?.[0]);
-          console.log('Invoices Array:', customerData.invoices);
-          console.log('Sample Invoice:', customerData.invoices?.[0]);
-        }
-        
-        setCustomer(customerData);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error details:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status
-        });
-        setError('Customer not found');
-        setLoading(false);
+  const fetchCustomer = async () => {
+    try {
+      console.log('Fetching customer with ID:', params.id);
+      const response = await api.get(`/customers/${params.id}`);
+      
+      // Log the entire response to see its structure
+      console.log('Full API Response:', response);
+      console.log('Customer Data Structure:', JSON.stringify(response.data, null, 2));
+      
+      // Check specifically for documents and invoices
+      console.log('Documents:', response.data.documents);
+      console.log('Invoices:', response.data.invoices);
+      console.log('Mailing Documents:', response.data.mailing_documents);
+      
+      // Create a properly structured customer object
+      const customerData = {
+        ...response.data,
+        // Use mailing_documents as documents for the frontend
+        documents: response.data.mailing_documents || [],
+        invoices: response.data.invoices || []
+      };
+      
+      // Log the document structure to see what fields are available
+      if (customerData.documents && customerData.documents.length > 0) {
+        console.log('First document structure:', JSON.stringify(customerData.documents[0], null, 2));
       }
-    };
+      
+      // Set the customer with the properly structured data
+      setCustomer(customerData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      setError('Customer not found');
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (params.id) {
       fetchCustomer();
     }
@@ -218,8 +233,8 @@ export default function CustomerDetailsPage() {
               </TableHeader>
               <TableBody>
                 {customer.documents.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell>{doc.id}</TableCell>
+                  <TableRow key={doc._id || doc.id}>
+                    <TableCell>{doc._id || doc.id}</TableCell>
                     <TableCell>
                       {new Date(doc.created_at).toLocaleDateString('en-US', {
                         month: 'long',
@@ -241,7 +256,12 @@ export default function CustomerDetailsPage() {
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={() => handleViewPdf(doc.id)}
+                        onClick={() => {
+                          // Try both _id and id since MongoDB often uses _id
+                          const documentId = doc._id || doc.id;
+                          console.log('Document ID for PDF view:', documentId);
+                          handleViewPdf(documentId);
+                        }}
                       >
                         View PDF
                       </Button>
