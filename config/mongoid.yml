@@ -1,16 +1,29 @@
 development:
   clients:
     default:
-      uri: <%= ENV['MONGODB_URI'] %>
+      uri: <%= ENV['MONGODB_URI'] || 'mongodb://localhost:27017/auto_mail_development' %>
+      options:
+        server_selection_timeout: 5
+        connect_timeout: 5
+  options:
+    log_level: :warn
 
 test:
   clients:
     default:
-      uri: <%= ENV['MONGODB_URI'] %>
+      uri: <%= ENV['MONGODB_URI'] || 'mongodb://localhost:27017/auto_mail_test' %>
+      options:
+        server_selection_timeout: 5
+        connect_timeout: 5
+  options:
+    log_level: :warn
 
 production:
   clients:
     default:
       uri: <%= ENV['MONGODB_URI'] %>
       options:
-        auth_source: admin 
+        server_selection_timeout: 5
+        connect_timeout: 5
+  options:
+    log_level: :warn

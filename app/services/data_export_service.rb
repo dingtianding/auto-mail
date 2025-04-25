@@ -3,43 +3,29 @@ require 'json'
 require 'builder'
 
 class DataExportService
-  def self.to_csv(customers)
+  def self.to_csv(records)
+    return "" if records.empty?
+    
+    # Get column names from the first record
+    columns = records.first.attributes.keys - ['created_at', 'updated_at']
+    
     CSV.generate(headers: true) do |csv|
-      csv << ['name', 'email', 'address', 'phone']
+      # Add headers
+      csv << columns
       
-      customers.each do |customer|
-        csv << [
-          customer.name,
-          customer.email,
-          customer.address,
-          customer.phone
-        ]
+      # Add data rows
+      records.each do |record|
+        csv << columns.map { |column| record.send(column) }
       end
     end
   end
 
-  def self.to_json(customers)
-    customers.map do |customer|
-      {
-        name: customer.name,
-        email: customer.email,
-        address: customer.address,
-        phone: customer.phone
-      }
-    end.to_json
+  def self.to_json(records)
+    records.to_json
   end
 
-  def self.to_xml(customers)
-    xml = Builder::XmlMarkup.new(indent: 2)
-    xml.customers do
-      customers.each do |customer|
-        xml.customer do
-          xml.name customer.name
-          xml.email customer.email
-          xml.address customer.address
-          xml.phone customer.phone
-        end
-      end
-    end
+  def self.to_xml(records)
+    records.to_xml
   end
+end 
 end 

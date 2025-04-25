@@ -1,0 +1,106 @@
+QuickPilot
+
+A lightweight, full-stack AI-powered financial automation platform — built to demonstrate product thinking, full-stack development skills, and integration of modern AI tools.
+
+🌐 Live Demo
+
+Coming soon...
+
+📁 Project Structure
+
+Key Features
+
+Accounts Payable: Simulated end-to-end vendor payment management
+
+Accounts Receivable: Automated invoice creation from contract-like inputs
+
+AI Financial Copilot: GPT-powered assistant for invoice parsing and financial Q&A
+
+Partner Pages: Simulated portals for Accounting and Developer partners
+
+Core Technologies
+
+Frontend
+
+TypeScript, React, Next.js
+
+Tailwind CSS, Shadcn for UI components
+
+Chart.js / D3 for financial visualizations
+
+Backend
+
+Django (Python) or Ruby on Rails (alternative based on speed of development)
+
+PostgreSQL
+
+Auth0 for secure authentication
+
+AI Integrations
+
+OpenAI API (GPT-4) for invoice extraction & natural language queries
+
+File upload & parsing for PDFs/images of invoices/contracts
+
+DevOps
+
+Deployed via Vercel (frontend) and Render/Fly.io/Heroku (backend)
+
+GitHub Actions for CI/CD
+
+🧠 AI Use Case
+
+AI Invoice Parser
+
+Upload an invoice (PDF or image)
+
+AI extracts key metadata (vendor, due date, amount, line items)
+
+Pre-fills invoice form to simulate automation
+
+AI Copilot (Chat Interface)
+
+Ask "What are my top 3 recurring expenses this month?"
+
+"How much did I spend on AWS last quarter?"
+
+💼 Why This Project
+
+Rebuilt this project to:
+
+Replace outdated past projects with a modern, relevant SaaS demo
+
+Showcase real-world application of LLMs in financial workflows
+
+Demonstrate full-stack ownership and product sense
+
+🧪 Roadmap
+
+
+
+🧑‍💻 Author
+
+Dean Ding — LinkedIn | GitHub | Portfolio
+
+This is a personal project built to showcase initiative, technical breadth, and creative application of AI in finance.
+
+<!-- Business Metrics:
+Total number of customers
+Total number of documents
+Total number of invoices
+Total revenue
+Monthly revenue data
+Invoice status distribution
+For AI Insights:
+All the above metrics
+Revenue trends (increasing/decreasing/stable)
+Average revenue per customer
+Document-to-customer ratio
+Invoice payment rates
+Monthly revenue patterns -->
+
+
+<!-- Format the business data into a structured prompt
+Send that prompt to the LLM API
+Parse the response to extract the summary, trends, and action items
+Return the structured insights to the frontend -->

@@ -48,16 +48,21 @@ class MailingDocument
     nil
   end
 
+  def pdf_url
+    return nil unless pdf_data.present?
+    "/api/customers/#{customer_id}/documents/#{id}/download"
+  end
+
   def status_color
     case status
     when 'completed' then 'success'
+    when 'processing' then 'warning'
     when 'failed' then 'danger'
-    when 'processing' then 'info'
-    else 'warning'
+    else 'secondary'
     end
   end
 
   def status_label
-    status.presence || 'pending'
+    status.titleize
   end
 end 

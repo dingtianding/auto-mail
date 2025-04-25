@@ -39,4 +39,9 @@ gem "nokogiri", "~> 1.18"
 
 gem "builder", "~> 3.3"
 
+gem 'rack-cors'
+
+# Add HTTParty for API requests
+gem 'httparty'
+
 
