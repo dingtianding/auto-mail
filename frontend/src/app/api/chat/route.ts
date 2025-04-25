@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server"
+import { API_BASE } from "@/lib/api";
 
 export async function POST(request: Request) {
   try {
     const { message } = await request.json()
     console.log('Next.js API received message:', message)
     
-    // Use environment variable instead of hardcoded URL
-    const railsBackendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-    const apiUrl = `${railsBackendUrl}/api/chat`
+    const apiUrl = `${API_BASE}/api/chat`
     
     console.log('Forwarding request to Rails backend:', apiUrl)
     
