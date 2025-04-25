@@ -142,31 +142,21 @@ module Api
     end
 
     def analyze
-      return render_error("No file uploaded", :unprocessable_entity) unless params[:file]
+      return render json: { error: "No file uploaded" }, status: :unprocessable_entity unless params[:file]
 
       begin
         analyzer = AiDocumentAnalyzer.new(params[:file])
         analysis_result = analyzer.analyze
-        render_success(analysis_result)
+        render json: { success: true, data: analysis_result }, status: :ok
       rescue => e
         Rails.logger.error "AI Analysis error: #{e.message}\n#{e.backtrace.join("\n")}"
         
-        # Fallback to mock response on error
-        mock_result = {
-          can_import: true,
-          confidence_score: 0.85,
-          warnings: [
-            "Error occurred: #{e.message}",
-            "Using fallback analysis"
-          ],
-          suggestions: [
-            "Check file format",
-            "Try again later"
-          ],
-          analysis_details: "Analysis failed, using fallback data. Error: #{e.message}"
-        }
-        
-        render_success(mock_result)
+        # No fallback - return the actual error
+        render json: { 
+          success: false, 
+          error: "Analysis failed: #{e.message}",
+          details: Rails.env.development? ? e.backtrace.first(5) : nil
+        }, status: :internal_server_error
       end
     end
 
