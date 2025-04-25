@@ -7,8 +7,22 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Download, Sparkles, AlertCircle, CheckCircle, XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import axios from "axios";
 
+// Determine the base URL based on the environment
+const getBaseUrl = () => {
+  // Check if we're in a browser environment
+  if (typeof window !== 'undefined') {
+    // If the frontend is running on Render, use the production backend URL
+    if (window.location.origin.includes('render.com')) {
+      return 'https://quickpilot-backend.onrender.com/api';
+    }
+  }
+  
+  // Default to localhost for development
+  return 'http://localhost:3001/api';
+};
+
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
