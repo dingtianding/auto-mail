@@ -44,6 +44,7 @@ Rails.application.routes.draw do
     get '/customers.csv', to: 'customers#export'
     get '/dashboard', to: 'dashboard#index'
     resources :prompts
+    post 'ai/analyze', to: 'ai#analyze'
   end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

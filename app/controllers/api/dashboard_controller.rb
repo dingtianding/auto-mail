@@ -431,7 +431,7 @@ module Api
           "recommendations": ["Recommendation 1", "Recommendation 2", ...]
         }
 
-        IMPORTANT: Make sure to include specific, actionable recommendations based on the data. If revenue is low or zero, suggest specific strategies to increase sales. If there are pending invoices, recommend following up on them. Be specific and practical.
+        IMPORTANT: Make sure your response is valid JSON. Do not include any text outside the JSON object.
       PROMPT
 
       # Call the Groq API
@@ -442,12 +442,20 @@ module Api
       
       # Parse the JSON response
       begin
-        insights = JSON.parse(response)
-        # Add the raw response to the insights
-        insights["rawOutput"] = raw_response
-        return insights
+        # Try to find valid JSON in the response by looking for matching braces
+        json_match = response.match(/\{.*\}/m)
+        if json_match
+          json_string = json_match[0]
+          insights = JSON.parse(json_string)
+          # Add the raw response to the insights
+          insights["rawOutput"] = raw_response
+          return insights
+        else
+          raise JSON::ParserError, "No JSON object found in response"
+        end
       rescue JSON::ParserError => e
         Rails.logger.error("Error parsing Groq response: #{e.message}")
+        Rails.logger.error("Raw response: #{raw_response}")
         # Return fallback insights if parsing fails
         return {
           "detailedAnalysis" => "The business is currently experiencing a stagnant period with minimal revenue. There appears to be customer engagement but limited conversion to sales. Further analysis and action is recommended to improve revenue generation.",
