@@ -32,4 +32,6 @@ class Customer < ApplicationRecord
       end
     end
   end
+
+  has_many :invoices
 end

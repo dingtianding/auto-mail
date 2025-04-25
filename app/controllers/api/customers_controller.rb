@@ -267,6 +267,42 @@ module Api
       render plain: csv_data
     end
 
+    def generate_letter
+      customer = Customer.find(params[:id])
+      Rails.logger.info("Found customer: #{customer.inspect}")
+      
+      # Check if customer has invoices association
+      unless customer.respond_to?(:invoices)
+        render json: { error: "Customer model does not have invoices association" }, status: :unprocessable_entity
+        return
+      end
+
+      # Get unpaid invoices with logging
+      unpaid_invoices = customer.invoices.unpaid
+      Rails.logger.info("Unpaid invoices: #{unpaid_invoices.to_sql}")
+      Rails.logger.info("Unpaid invoices count: #{unpaid_invoices.count}")
+      
+      # Check if customer has any unpaid invoices
+      if unpaid_invoices.empty?
+        render json: { 
+          error: "No unpaid invoices found for this customer" 
+        }, status: :unprocessable_entity
+        return
+      end
+      
+      content = GroqService.generate_payment_reminder(customer)
+      render json: { content: content }
+    rescue ActiveRecord::RecordNotFound => e
+      render json: { error: "Customer not found" }, status: :not_found
+    rescue => e
+      Rails.logger.error("Error in generate_letter: #{e.message}")
+      Rails.logger.error(e.backtrace.join("\n"))
+      render json: { 
+        error: e.message,
+        details: Rails.env.development? ? e.backtrace.first : nil
+      }, status: :unprocessable_entity
+    end
+
     private
 
     def customer_params

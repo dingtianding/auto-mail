@@ -22,6 +22,7 @@ class Invoice < ApplicationRecord
   before_save :calculate_totals
   
   scope :recent, -> { order(created_at: :desc).limit(5) }
+  scope :unpaid, -> { where(status: ['pending', 'overdue']) }
   
   # Custom method to find associated MongoDB document
   def invoice_document

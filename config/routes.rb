@@ -19,29 +19,20 @@ Rails.application.routes.draw do
 
   namespace :api do
     resources :customers do
+      resources :mailing_documents do
+        member do
+          post :generate_pdf
+          get :download
+          post :regenerate
+        end
+      end
       collection do
         post :analyze
         post :import
         post :bulk_destroy
         get :export, defaults: { format: 'csv' }
       end
-      resources :documents, controller: 'mailing_documents' do
-        member do
-          post :generate_pdf
-          get :download
-        end
-      end
-      resources :invoices do
-        member do
-          get :download
-        end
-      end
-      resources :mailing_documents do
-        member do
-          get :regenerate
-          get :download
-        end
-      end
+      post :generate_letter, on: :member
     end
     resources :imports
     get 'dashboard/stats', to: 'dashboard#stats'

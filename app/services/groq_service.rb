@@ -4,8 +4,7 @@ require 'json'
 
 class GroqService
   def self.call(prompt)
-    return "AI response not available in development mode" unless Rails.env.production? || ENV['ENABLE_AI_IN_DEVELOPMENT'] == 'true'
-    
+    # Always use the real API in both production and development
     begin
       # Check if API key is configured
       api_key = ENV['GROQ_API_KEY']
@@ -14,42 +13,55 @@ class GroqService
         return "AI service is not properly configured. Please check your environment variables."
       end
       
-      Rails.logger.info("Initializing Groq client")
+      Rails.logger.info("Initializing Groq API request")
       
-      # Set up the API client
-      client = Groq::Client.new(api_key: api_key)
+      # Use direct HTTP request instead of the gem
+      uri = URI.parse("https://api.groq.com/openai/v1/chat/completions")
+      request = Net::HTTP::Post.new(uri)
+      request["Authorization"] = "Bearer #{api_key}"
+      request["Content-Type"] = "application/json"
       
-      Rails.logger.info("Sending request to Groq API with prompt length: #{prompt.length}")
-      
-      # Create chat completion
-      chat_completion = client.chat.completions.create(
+      request.body = {
+        model: "llama3-70b-8192",
         messages: [
           { role: "system", content: "You are a helpful assistant for an automated mailing service business. Provide concise, accurate information about mailing services, document management, and customer relationship management. If you don't know something, say so rather than making up information." },
           { role: "user", content: prompt }
         ],
-        model: "llama3-70b-8192",
         temperature: 0.5,
         max_tokens: 1024
-      )
+      }.to_json
       
-      Rails.logger.info("Received response from Groq API")
+      Rails.logger.info("Sending request to Groq API with prompt length: #{prompt.length}")
       
-      # Extract and return the response
-      if chat_completion.choices.empty?
-        Rails.logger.error("Groq API returned empty choices array")
-        return "Sorry, I received an empty response from the AI service. Please try again."
+      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+        http.request(request)
       end
       
-      response = chat_completion.choices[0].message.content
+      Rails.logger.info("Received response from Groq API: #{response.code}")
       
-      if response.blank?
-        Rails.logger.error("Groq API returned empty content")
-        return "Sorry, I received an empty response from the AI service. Please try again."
+      if response.code == "200"
+        parsed_response = JSON.parse(response.body)
+        
+        if !parsed_response["choices"] || parsed_response["choices"].empty?
+          Rails.logger.error("Groq API returned empty choices array")
+          return "Sorry, I received an empty response from the AI service. Please try again."
+        end
+        
+        content = parsed_response["choices"][0]["message"]["content"]
+        
+        if content.blank?
+          Rails.logger.error("Groq API returned empty content")
+          return "Sorry, I received an empty response from the AI service. Please try again."
+        end
+        
+        Rails.logger.info("Successfully extracted response with length: #{content.length}")
+        
+        return content
+      else
+        error_message = "Groq API error: #{response.code} - #{response.body}"
+        Rails.logger.error(error_message)
+        return "Sorry, I'm having trouble connecting to my AI service right now. Please try again later. Error: #{response.code}"
       end
-      
-      Rails.logger.info("Successfully extracted response with length: #{response.length}")
-      
-      return response
     rescue => e
       Rails.logger.error("Groq API error: #{e.message}")
       Rails.logger.error(e.backtrace.join("\n"))
@@ -58,12 +70,7 @@ class GroqService
   end
   
   def self.chat(message, context = nil, model = "llama3-70b-8192")
-    # For testing in development, return a fixed response if GROQ_API_KEY is not set
-    if ENV['GROQ_API_KEY'].blank? && Rails.env.development?
-      Rails.logger.info("Using test response in development (no API key)")
-      return "Hello! I'm the AI assistant for QuickPilot. How can I help you today? This is a test response since the GROQ_API_KEY is not configured."
-    end
-    
+    # Always use the real API in both production and development
     begin
       # Check if API key is set
       if ENV['GROQ_API_KEY'].blank?
@@ -165,5 +172,62 @@ class GroqService
       Rails.logger.error(e.backtrace.join("\n"))
       return "I'm sorry, the service is currently unavailable. Please try again later."
     end
+  end
+
+  def self.generate_payment_reminder(customer)
+    # Get customer's unpaid invoices
+    unpaid_invoices = customer.invoices.unpaid
+    Rails.logger.info("Generating payment reminder for customer: #{customer.id}")
+    Rails.logger.info("Unpaid invoices count: #{unpaid_invoices.count}")
+
+    # Return early if no unpaid invoices
+    if unpaid_invoices.empty?
+      raise "No unpaid invoices found for this customer"
+    end
+
+    # Build context for the AI
+    context = {
+      customer_name: customer.name,
+      customer_address: customer.address,
+      total_amount_due: unpaid_invoices.sum(:total_amount),
+      oldest_invoice_date: unpaid_invoices.minimum(:issue_date)&.strftime('%B %d, %Y'),
+      latest_invoice_date: unpaid_invoices.maximum(:issue_date)&.strftime('%B %d, %Y'),
+      invoice_count: unpaid_invoices.count,
+      company_name: ENV['COMPANY_NAME'] || "Your Company Name",
+      company_contact: ENV['COMPANY_EMAIL'] || "contact@example.com"
+    }
+    
+    Rails.logger.info("Context for AI: #{context.inspect}")
+
+    # Prompt template for the payment reminder
+    prompt = <<~PROMPT
+      Generate a professional payment reminder letter with the following details:
+      
+      Customer: #{context[:customer_name]}
+      Address: #{context[:customer_address]}
+      Total Amount Due: $#{context[:total_amount_due]}
+      Number of Unpaid Invoices: #{context[:invoice_count]}
+      Oldest Invoice Date: #{context[:oldest_invoice_date]}
+      Latest Invoice Date: #{context[:latest_invoice_date]}
+      
+      The letter should:
+      1. Be professional and courteous
+      2. Clearly state the total amount due
+      3. Mention the date range of unpaid invoices
+      4. Request prompt payment
+      5. Include contact information for questions
+      6. Thank the customer for their business
+      
+      Use formal business letter format.
+    PROMPT
+
+    # Use the existing call method to generate the letter
+    response = call(prompt)
+    
+    if response.include?("Sorry") || response.include?("error")
+      raise "Failed to generate letter: #{response}"
+    end
+    
+    response
   end
 end 
