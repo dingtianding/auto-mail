@@ -5,8 +5,8 @@ export async function POST(request: Request) {
     const { message } = await request.json()
     console.log('Next.js API received message:', message)
     
-    // Point to Rails backend on port 3001
-    const railsBackendUrl = 'http://localhost:3001'
+    // Use environment variable instead of hardcoded URL
+    const railsBackendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
     const apiUrl = `${railsBackendUrl}/api/chat`
     
     console.log('Forwarding request to Rails backend:', apiUrl)

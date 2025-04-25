@@ -5,14 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import api from '@/lib/api';
 
 export default function NewCustomerPage() {
   const router = useRouter();
