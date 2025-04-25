@@ -1,5 +1,7 @@
 module Api
   class CustomersController < ApplicationController
+    skip_before_action :verify_authenticity_token
+
     def index
       customers = Customer.all
       render json: customers
@@ -175,16 +177,16 @@ module Api
         begin
           # Use delete instead of destroy to avoid association callbacks
           if customer.delete
-            render_success({ message: "Customer deleted successfully" })
+            render json: { message: "Customer deleted successfully" }, status: :ok
           else
-            render_error("Failed to delete customer", :unprocessable_entity)
+            render json: { error: "Failed to delete customer" }, status: :unprocessable_entity
           end
         rescue => e
           Rails.logger.error "Error deleting customer: #{e.message}\n#{e.backtrace.join("\n")}"
-          render_error("Error deleting customer: #{e.message}", :unprocessable_entity)
+          render json: { error: "Error deleting customer: #{e.message}" }, status: :unprocessable_entity
         end
       else
-        render_error("Customer not found", :not_found)
+        render json: { error: "Customer not found" }, status: :not_found
       end
     end
 

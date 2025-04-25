@@ -102,6 +102,24 @@ export default function CustomerDetailsPage() {
     }
   };
 
+  const handleViewInvoicePdf = async (invoiceId: string | number) => {
+    try {
+      console.log('Viewing Invoice PDF for invoice ID:', invoiceId);
+      
+      if (!invoiceId) {
+        console.error('Invoice ID is undefined or null');
+        return;
+      }
+      
+      // Open the PDF in a new window/tab
+      // This uses the non-API route which should work with format: pdf
+      window.open(`/customers/${params.id}/invoices/${invoiceId}.pdf`, '_blank');
+    } catch (error) {
+      console.error('Error opening invoice PDF:', error);
+      alert('Could not open PDF. Please try again later.');
+    }
+  };
+
   const fetchCustomer = async () => {
     try {
       console.log('Fetching customer with ID:', params.id);
@@ -334,7 +352,10 @@ export default function CustomerDetailsPage() {
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={() => window.open(`/customers/${customer.id}/invoices/${invoice.id}.pdf`)}
+                        onClick={() => {
+                          console.log('Invoice ID for PDF view:', invoice.id);
+                          handleViewInvoicePdf(invoice.id);
+                        }}
                       >
                         <i className="fas fa-file-pdf mr-2" /> View PDF
                       </Button>

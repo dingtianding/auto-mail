@@ -1,43 +1,33 @@
 module Api
-  class PromptsController < Api::BaseController
-    def index
-      @prompts = Prompt.all
-      render_success(@prompts)
+  class PromptsController < ApplicationController
+    skip_before_action :verify_authenticity_token
+    
+    # Get the current prompt
+    def current
+      prompt = Prompt.order(created_at: :desc).first
+      
+      if prompt
+        render json: { content: prompt.content }
+      else
+        render json: { content: default_prompt }
+      end
     end
-
-    def show
-      @prompt = Prompt.find(params[:id])
-      render_success(@prompt)
-    end
-
+    
+    # Create a new prompt
     def create
-      @prompt = Prompt.new(prompt_params)
-      if @prompt.save
-        render_success(@prompt, :created)
+      prompt = Prompt.new(content: params[:content])
+      
+      if prompt.save
+        render json: { message: "Prompt saved successfully" }, status: :created
       else
-        render_error(@prompt.errors.full_messages, :unprocessable_entity)
+        render json: { error: prompt.errors.full_messages.join(", ") }, status: :unprocessable_entity
       end
     end
-
-    def update
-      @prompt = Prompt.find(params[:id])
-      if @prompt.update(prompt_params)
-        render_success(@prompt)
-      else
-        render_error(@prompt.errors.full_messages, :unprocessable_entity)
-      end
-    end
-
-    def destroy
-      @prompt = Prompt.find(params[:id])
-      @prompt.destroy
-      render_success({ message: 'Prompt deleted successfully' })
-    end
-
+    
     private
-
-    def prompt_params
-      params.require(:prompt).permit(:name, :content, :category, :active, :description, :parameters, :version)
+    
+    def default_prompt
+      "You are a helpful assistant for FinanceFlow. Answer questions about financial data, invoices, and customer information."
     end
   end
 end 

@@ -7,7 +7,8 @@ import {
   LayoutDashboard,
   Users,
   Building2,
-  FileText
+  FileText,
+  Settings
 } from "lucide-react"
 
 export function Sidebar() {
@@ -40,8 +41,8 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-[#1D1B2F] h-screen text-white">
-      <nav className="space-y-0.5 pt-4">
+    <aside className="w-64 bg-[#1D1B2F] h-screen text-white flex flex-col">
+      <nav className="space-y-0.5 pt-4 flex-1">
         <NavItem href="/dashboard" icon={LayoutDashboard}>
           DASHBOARD
         </NavItem>
@@ -71,6 +72,15 @@ export function Sidebar() {
         </div>
         <NavItem href="/reports" icon={FileText} disabled>
           Reports
+        </NavItem>
+        
+        <div className="pt-4 pb-2">
+          <div className="px-4 py-2 text-xs font-medium text-gray-400 uppercase">
+            System
+          </div>
+        </div>
+        <NavItem href="/settings" icon={Settings}>
+          Settings
         </NavItem>
       </nav>
     </aside>

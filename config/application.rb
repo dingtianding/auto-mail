@@ -18,5 +18,19 @@ module AutoMail
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Configure CORS to allow requests from your frontend
+    config.middleware.insert_before 0, Rack::Cors do
+      allow do
+        origins 'localhost:3000'  # Your frontend origin
+        resource '*',
+          headers: :any,
+          methods: [:get, :post, :put, :patch, :delete, :options, :head],
+          credentials: true
+      end
+    end
+    
+    # Skip CSRF protection for API requests
+    config.action_controller.forgery_protection_origin_check = false
   end
 end
